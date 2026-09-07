@@ -181,9 +181,28 @@ class SBPreferencesController: NSWindowController {
 
     struct LastFMView: View {
         @ObservedObject private var lastFM = SBLastFM.shared
+        @State private var apiKeyDraft = ""
+        @State private var apiSecretDraft = ""
 
         var body: some View {
             Form {
+                Section {
+                    TextField("API Key", text: $apiKeyDraft)
+                    SecureField("Shared Secret", text: $apiSecretDraft)
+                    HStack {
+                        if let signupURL = URL(string: "https://www.last.fm/api/account/create") {
+                            Link("Get an API account", destination: signupURL)
+                                .font(.caption)
+                        }
+                        Spacer()
+                        Button("Save") {
+                            lastFM.saveAPICredentials(key: apiKeyDraft, secret: apiSecretDraft)
+                        }
+                    }
+                } header: {
+                    Text("API Credentials")
+                }
+
                 Section {
                     if lastFM.isAuthenticated {
                         HStack {
@@ -208,6 +227,7 @@ class SBPreferencesController: NSWindowController {
                         Button("Connect Last.fm") {
                             lastFM.authenticate()
                         }
+                        .disabled(!lastFM.hasAPIConfiguration)
                     }
                 }
 
@@ -221,8 +241,19 @@ class SBPreferencesController: NSWindowController {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            // Give the form a bounded width before `.fixedSize()`: without it,
+            // `.fixedSize()` on the Form makes SwiftUI use each Text's
+            // unconstrained single-line width as the "ideal" size, so the
+            // longer sentences here never actually wrap and the window ends
+            // up as wide as the longest line instead of the intended layout.
+            .frame(width: 320)
             .fixedSize()
             .padding(14)
+            .onAppear {
+                let stored = lastFM.storedAPICredentials()
+                apiKeyDraft = stored.key
+                apiSecretDraft = stored.secret
+            }
         }
     }
 

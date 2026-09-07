@@ -1230,8 +1230,6 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "Submariner/Submariner-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
-				LASTFM_API_KEY = "";
-				LASTFM_API_SECRET = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@loader_path/../Frameworks",
 					"@executable_path/../Frameworks",
@@ -1280,8 +1278,6 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "Submariner/Submariner-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
-				LASTFM_API_KEY = "";
-				LASTFM_API_SECRET = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@loader_path/../Frameworks",
 					"@executable_path/../Frameworks",

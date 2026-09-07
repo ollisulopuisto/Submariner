@@ -16,18 +16,23 @@ private let lastFMLogger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "Su
 
 /// Last.fm Web Services client and scrobbler.
 ///
-/// API credentials are read from the application's Info.plist using
-/// LastFMAPIKey and LastFMAPISecret. These are deliberately not hard-coded
-/// in the source tree: a Last.fm API account is required for distribution.
+/// API credentials are entered by the user in the Last.fm preferences tab
+/// (not baked in at build time) and stored in the macOS Keychain, the same
+/// way the session key is. A Last.fm API account is required: anyone who
+/// wants scrobbling has to register their own at
+/// last.fm/api/account/create and paste the key/secret in.
 final class SBLastFM: NSObject, ObservableObject {
     static let shared = SBLastFM()
 
     private static let apiURL = URL(string: "https://ws.audioscrobbler.com/2.0/")!
     private static let service = "\(Bundle.main.bundleIdentifier ?? "Submariner").lastfm"
-    private static let account = "sessionKey"
+    private static let sessionAccount = "sessionKey"
+    private static let apiKeyAccount = "apiKey"
+    private static let apiSecretAccount = "apiSecret"
 
     @Published private(set) var username: String?
     @Published private(set) var isAuthenticated = false
+    @Published private(set) var hasAPIConfiguration: Bool
     @Published var enabled: Bool {
         didSet {
             UserDefaults.standard.set(enabled, forKey: "lastFMEnabled")
@@ -47,27 +52,14 @@ final class SBLastFM: NSObject, ObservableObject {
 
     override private init() {
         enabled = UserDefaults.standard.bool(forKey: "lastFMEnabled")
+        hasAPIConfiguration = false
         super.init()
+        hasAPIConfiguration = computeHasAPIConfiguration()
         loadSession()
     }
 
     deinit {
         progressTimer?.cancel()
-    }
-
-    // MARK: - Credentials
-
-    private var apiKey: String? {
-        Bundle.main.object(forInfoDictionaryKey: "LastFMAPIKey") as? String
-    }
-
-    private var apiSecret: String? {
-        Bundle.main.object(forInfoDictionaryKey: "LastFMAPISecret") as? String
-    }
-
-    private var hasAPIConfiguration: Bool {
-        guard let key = apiKey, let secret = apiSecret else { return false }
-        return !key.isEmpty && !secret.isEmpty
     }
 
     // MARK: - Authentication
@@ -130,7 +122,7 @@ final class SBLastFM: NSObject, ObservableObject {
     }
 
     func disconnect() {
-        deleteSessionKey()
+        deleteKeychainString(account: Self.sessionAccount)
         authToken = nil
         username = nil
         isAuthenticated = false
@@ -158,7 +150,7 @@ final class SBLastFM: NSObject, ObservableObject {
             throw SBLastFMError.invalidResponse
         }
 
-        try saveSessionKey(key)
+        try saveKeychainString(key, account: Self.sessionAccount)
         await MainActor.run {
             self.username = name
             self.isAuthenticated = true
@@ -168,7 +160,7 @@ final class SBLastFM: NSObject, ObservableObject {
     }
 
     private func loadSession() {
-        guard let key = readSessionKey() else { return }
+        guard let key = readKeychainString(account: Self.sessionAccount) else { return }
 
         Task {
             do {
@@ -205,7 +197,7 @@ final class SBLastFM: NSObject, ObservableObject {
             do {
                 _ = try await call(method: "track.updateNowPlaying",
                                    parameters: metadata,
-                                   sessionKey: readSessionKey())
+                                   sessionKey: readKeychainString(account: Self.sessionAccount))
             } catch {
                 // Last.fm explicitly recommends not retrying failed Now Playing requests.
                 lastFMLogger.error("Last.fm Now Playing failed: \(error.localizedDescription, privacy: .public)")
@@ -309,7 +301,7 @@ final class SBLastFM: NSObject, ObservableObject {
 
         let response = try await call(method: "track.scrobble",
                                        parameters: parameters,
-                                       sessionKey: readSessionKey())
+                                       sessionKey: readKeychainString(account: Self.sessionAccount))
 
         guard let scrobbles = response["scrobbles"] as? [String: Any] else {
             throw SBLastFMError.invalidResponse
@@ -323,7 +315,7 @@ final class SBLastFM: NSObject, ObservableObject {
     }
 
     private func flushQueuedScrobbles() async throws {
-        guard let sessionKey = readSessionKey() else { return }
+        guard let sessionKey = readKeychainString(account: Self.sessionAccount) else { return }
         let queued = queuedScrobbles()
         guard !queued.isEmpty else { return }
 
@@ -498,15 +490,57 @@ final class SBLastFM: NSObject, ObservableObject {
     }
 }
 
+// MARK: - Credentials
+
+extension SBLastFM {
+    private var apiKey: String? {
+        readKeychainString(account: Self.apiKeyAccount)
+    }
+
+    private var apiSecret: String? {
+        readKeychainString(account: Self.apiSecretAccount)
+    }
+
+    private func computeHasAPIConfiguration() -> Bool {
+        guard let key = apiKey, let secret = apiSecret else { return false }
+        return !key.isEmpty && !secret.isEmpty
+    }
+
+    /// The API key/secret currently stored in the Keychain, for prefilling
+    /// the Last.fm preferences fields. Empty strings mean nothing is saved.
+    func storedAPICredentials() -> (key: String, secret: String) {
+        (apiKey ?? "", apiSecret ?? "")
+    }
+
+    /// Saves (or, for an emptied field, clears) the user-entered API
+    /// key/secret to the Keychain and updates `hasAPIConfiguration`.
+    func saveAPICredentials(key: String, secret: String) {
+        setKeychainString(Self.normalizedCredential(key), account: Self.apiKeyAccount)
+        setKeychainString(Self.normalizedCredential(secret), account: Self.apiSecretAccount)
+        hasAPIConfiguration = computeHasAPIConfiguration()
+    }
+
+    /// Trims whitespace from a user-entered credential, returning nil for an
+    /// effectively empty field so it can be treated as "not set" rather than
+    /// stored as blank.
+    static func normalizedCredential(_ raw: String) -> String? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+}
+
 // MARK: - Keychain
 
 extension SBLastFM {
-    private func saveSessionKey(_ key: String) throws {
-        let data = Data(key.utf8)
+    /// Writes a string under `account` in the Keychain, replacing any
+    /// existing value. Used for both the session key and the user-entered
+    /// API credentials.
+    private func saveKeychainString(_ value: String, account: String) throws {
+        let data = Data(value.utf8)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.service,
-            kSecAttrAccount as String: Self.account,
+            kSecAttrAccount as String: account,
             kSecValueData as String: data
         ]
         SecItemDelete(query as CFDictionary)
@@ -514,11 +548,27 @@ extension SBLastFM {
         guard status == errSecSuccess else { throw SBLastFMError.keychain(status) }
     }
 
-    private func readSessionKey() -> String? {
+    /// Saves `value` under `account`, or clears it if `value` is nil.
+    /// Keychain writes can fail (e.g. a locked login keychain); since this
+    /// backs plain preference fields rather than a user-initiated action
+    /// with its own error path, failures are logged rather than surfaced.
+    private func setKeychainString(_ value: String?, account: String) {
+        do {
+            if let value {
+                try saveKeychainString(value, account: account)
+            } else {
+                deleteKeychainString(account: account)
+            }
+        } catch {
+            lastFMLogger.error("Could not save Last.fm Keychain item \(account, privacy: .public): \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func readKeychainString(account: String) -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.service,
-            kSecAttrAccount as String: Self.account,
+            kSecAttrAccount as String: account,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -530,11 +580,11 @@ extension SBLastFM {
         return String(data: data, encoding: .utf8)
     }
 
-    private func deleteSessionKey() {
+    private func deleteKeychainString(account: String) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.service,
-            kSecAttrAccount as String: Self.account
+            kSecAttrAccount as String: account
         ]
         SecItemDelete(query as CFDictionary)
     }
@@ -548,8 +598,8 @@ extension SBLastFM {
         alert.alertStyle = .warning
         alert.messageText = "Last.fm is not configured"
         alert.informativeText =
-            "Submariner needs a Last.fm API key and shared secret. "
-            + "Add LastFMAPIKey and LastFMAPISecret to the application's Info.plist/build settings."
+            "Enter a Last.fm API key and shared secret in the Last.fm tab of Preferences, then try again. "
+            + "You can get one at last.fm/api/account/create."
         alert.addButton(withTitle: "OK")
         alert.runModal()
     }

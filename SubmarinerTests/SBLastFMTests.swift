@@ -119,4 +119,22 @@ final class SBLastFMTests: XCTestCase {
         let withFormat = SBLastFM.apiSignature(parameters: ["method": "auth.getToken", "format": "json"], secret: "s")
         XCTAssertEqual(withoutFormat, withFormat, "format must be excluded from the signed payload")
     }
+
+    // MARK: - normalizedCredential (user-entered API key/secret fields)
+
+    func testNormalizedCredential_trimsWhitespace() {
+        XCTAssertEqual(SBLastFM.normalizedCredential("  abc123  "), "abc123")
+    }
+
+    func testNormalizedCredential_emptyStringIsNil() {
+        XCTAssertNil(SBLastFM.normalizedCredential(""))
+    }
+
+    func testNormalizedCredential_whitespaceOnlyIsNil() {
+        XCTAssertNil(SBLastFM.normalizedCredential("   \n\t "))
+    }
+
+    func testNormalizedCredential_preservesInnerContent() {
+        XCTAssertEqual(SBLastFM.normalizedCredential("ab 12"), "ab 12")
+    }
 }
