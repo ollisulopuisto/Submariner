@@ -608,6 +608,8 @@ extension NSNotification.Name {
         if let server = track.server, UserDefaults.standard.scrobbleToServer, let itemId = track.itemId {
             server.scrobble(id: itemId)
         }
+
+        SBLastFM.shared.trackStarted(track)
     }
     
     private func playRemote(track: SBTrack) -> Bool {
@@ -782,6 +784,8 @@ extension NSNotification.Name {
             removeNowPlayingNotification()
             NotificationCenter.default.post(name: .SBPlayerPlaylistUpdated, object: self)
             NotificationCenter.default.post(name: .SBPlayerPlayState, object: self)
+
+            SBLastFM.shared.trackStopped()
         }
     }
     

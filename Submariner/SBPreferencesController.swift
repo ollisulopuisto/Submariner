@@ -6,7 +6,7 @@
 //
 //  Copyright (c) 2024 Calvin Buckley
 //  SPDX-License-Identifier: BSD-3-Clause
-//  
+//
 
 import Cocoa
 import SwiftUI
@@ -18,7 +18,7 @@ import SwiftUI
 class SBPreferencesTabViewController: NSTabViewController {
     /// If the height of the frame changes with the new tab, or the width as well.
     var preserveWidth: Bool = true
-    
+
     func newFrame(window: NSWindow, view: NSView) -> NSRect {
         let viewFrame = NSRect(origin: .zero, size: view.fittingSize)
         let newFrame = window.frameRect(forContentRect: viewFrame)
@@ -32,7 +32,7 @@ class SBPreferencesTabViewController: NSTabViewController {
         calculatedFrame.origin.y -= (newFrame.size.height - oldFrame.size.height)
         return calculatedFrame
     }
-    
+
     override func viewDidAppear() {
         guard let newView = self.tabViewItems[self.selectedTabViewItemIndex].view,
               let window = self.view.window else {
@@ -42,21 +42,21 @@ class SBPreferencesTabViewController: NSTabViewController {
         window.setFrame(newFrame, display: false)
         window.center()
     }
-    
+
     override func tabView(_ tabView: NSTabView, didSelect tabViewItem: NSTabViewItem?) {
         super.tabView(tabView, didSelect: tabViewItem)
-        
+
         // We have to put a transaction here, or i.e. quickly switching between tabs will break very badly.
         CATransaction.begin()
         defer { CATransaction.commit() }
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.1
-            
+
             guard let newView = tabViewItem?.view,
                   let window = self.view.window else {
                 return
             }
-            
+
             let newFrame = newFrame(window: window, view: newView)
             window.animator().setFrame(newFrame, display: true)
         }
@@ -72,27 +72,32 @@ class SBPreferencesController: NSWindowController {
         serverSettingsView.title = "Server"
         let appearanceSettingsView = NSHostingController(rootView: AppearanceView())
         appearanceSettingsView.title = "Appearance"
-        
+        let lastFMSettingsView = NSHostingController(rootView: LastFMView())
+        lastFMSettingsView.title = "Last.fm"
+
         let playerTab = NSTabViewItem(viewController: playerSettingsView)
-        playerTab.label = playerSettingsView.title!
+        playerTab.label = playerSettingsView.title ?? ""
         playerTab.image = NSImage(systemSymbolName: "hifispeaker", accessibilityDescription: "Player Settings")
         let serverTab = NSTabViewItem(viewController: serverSettingsView)
-        serverTab.label = serverSettingsView.title!
+        serverTab.label = serverSettingsView.title ?? ""
         serverTab.image = NSImage(systemSymbolName: "network", accessibilityDescription: "Server Settings")
         let appearanceTab = NSTabViewItem(viewController: appearanceSettingsView)
-        appearanceTab.label = appearanceSettingsView.title!
+        appearanceTab.label = appearanceSettingsView.title ?? ""
         appearanceTab.image = NSImage(systemSymbolName: "macwindow", accessibilityDescription: "Appearance Settings")
-        
+        let lastFMTab = NSTabViewItem(viewController: lastFMSettingsView)
+        lastFMTab.label = lastFMSettingsView.title ?? ""
+        lastFMTab.image = NSImage(systemSymbolName: "dot.radiowaves.left.and.right", accessibilityDescription: "Last.fm Settings")
+
         let tabViewController = SBPreferencesTabViewController()
         tabViewController.tabStyle = .toolbar
         tabViewController.transitionOptions = [.allowUserInteraction]
-        tabViewController.tabViewItems = [playerTab, serverTab, appearanceTab]
-        
+        tabViewController.tabViewItems = [playerTab, serverTab, appearanceTab, lastFMTab]
+
         let window = NSWindow(contentViewController: tabViewController)
         window.styleMask = [.closable, .miniaturizable, .titled]
         window.title = tabViewController.tabViewItems[tabViewController.selectedTabViewItemIndex].label
         window.toolbarStyle = .preference
-        
+
         super.init(window: window)
     }
 
@@ -134,8 +139,10 @@ class SBPreferencesController: NSWindowController {
             HStack {
                 Spacer()
                 Button {
-                    let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications?id=\(Bundle.main.bundleIdentifier!)")!
-                    NSWorkspace.shared.open(url)
+                    let bundleID = Bundle.main.bundleIdentifier ?? "Submariner"
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications?id=\(bundleID)") {
+                        NSWorkspace.shared.open(url)
+                    }
                 } label: {
                     Text("Notification Settings...")
                 }
@@ -171,7 +178,85 @@ class SBPreferencesController: NSWindowController {
             .padding(14)
         }
     }
-    
+
+    struct LastFMView: View {
+        @ObservedObject private var lastFM = SBLastFM.shared
+        @State private var apiKeyDraft = ""
+        @State private var apiSecretDraft = ""
+
+        var body: some View {
+            Form {
+                Section {
+                    TextField("API Key", text: $apiKeyDraft)
+                    SecureField("Shared Secret", text: $apiSecretDraft)
+                    HStack {
+                        if let signupURL = URL(string: "https://www.last.fm/api/account/create") {
+                            Link("Get an API account", destination: signupURL)
+                                .font(.caption)
+                        }
+                        Spacer()
+                        Button("Save") {
+                            lastFM.saveAPICredentials(key: apiKeyDraft, secret: apiSecretDraft)
+                        }
+                    }
+                } header: {
+                    Text("API Credentials")
+                }
+
+                Section {
+                    if lastFM.isAuthenticated {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                            VStack(alignment: .leading) {
+                                Text("Connected to Last.fm")
+                                if let username = lastFM.username {
+                                    Text(username)
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                            Spacer()
+                            Button("Disconnect") {
+                                lastFM.disconnect()
+                            }
+                        }
+
+                        Toggle("Scrobble tracks", isOn: $lastFM.enabled)
+                    } else {
+                        Text("Connect Submariner to Last.fm to scrobble your listening history.")
+                            .fixedSize(horizontal: false, vertical: true)
+                        Button("Connect Last.fm") {
+                            lastFM.authenticate()
+                        }
+                        .disabled(!lastFM.hasAPIConfiguration)
+                    }
+                }
+
+                Section {
+                    Text(
+                        "Submariner sends Now Playing when a track starts and scrobbles it "
+                        + "after at least half the track or four minutes, following Last.fm's scrobbling rules."
+                    )
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            // Give the form a bounded width before `.fixedSize()`: without it,
+            // `.fixedSize()` on the Form makes SwiftUI use each Text's
+            // unconstrained single-line width as the "ideal" size, so the
+            // longer sentences here never actually wrap and the window ends
+            // up as wide as the longest line instead of the intended layout.
+            .frame(width: 320)
+            .fixedSize()
+            .padding(14)
+            .onAppear {
+                let stored = lastFM.storedAPICredentials()
+                apiKeyDraft = stored.key
+                apiSecretDraft = stored.secret
+            }
+        }
+    }
+
     struct AppearanceView: View {
         @AppStorage("coverSize") var coverSize = 0.75
         @AppStorage("albumSortOrder") var albumSortOrder = "OldestFirst"

@@ -150,6 +150,7 @@
 		4CFB3EF8139D47EA008DC01A /* SBViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CFB3EF7139D47EA008DC01A /* SBViewController.m */; };
 		4CFCE444140257EE00D35770 /* MusicSearch.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4CFCE443140257EE00D35770 /* MusicSearch.xib */; };
 		4CFCE4471402582400D35770 /* SBMusicSearchController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CFCE4461402582400D35770 /* SBMusicSearchController.m */; };
+		7807795644A62C983D5DBE9A /* SBLastFM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03B45D26EFAEA17F6C389CEA /* SBLastFM.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -166,6 +167,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		03B45D26EFAEA17F6C389CEA /* SBLastFM.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SBLastFM.swift; sourceTree = "<group>"; };
 		3E04F5EA2B7043F600E24E56 /* SBMergeArtistsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SBMergeArtistsController.swift; sourceTree = "<group>"; };
 		3E04F5EC2B70487200E24E56 /* SBAddServerPlaylistController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SBAddServerPlaylistController.swift; sourceTree = "<group>"; };
 		3E04F5EE2B71D46E00E24E56 /* Submariner v5.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Submariner v5.xcdatamodel"; sourceTree = "<group>"; };
@@ -694,6 +696,7 @@
 			children = (
 				3E70B2E02A2D52A1002C0B93 /* SBPlayer.swift */,
 				3E2155112B26E6F0004BCCFC /* SBSubsonicRequestType.swift */,
+				03B45D26EFAEA17F6C389CEA /* SBLastFM.swift */,
 			);
 			name = Subsonic;
 			sourceTree = "<group>";
@@ -955,6 +958,7 @@
 				3E45201A29F5DE9100604079 /* SBImportOperation.swift in Sources */,
 				4C56868514050B9A00BE3478 /* SBPodcastItemView.m in Sources */,
 				4C56868814050C1100BE3478 /* SBPodcastViewItem.m in Sources */,
+				7807795644A62C983D5DBE9A /* SBLastFM.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

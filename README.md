@@ -1,5 +1,12 @@
 # Submariner
 
+## Last.fm scrobbling
+
+Submariner includes optional Last.fm scrobbling. It uses Last.fm's desktop application authentication flow, stores the resulting session key in the macOS Keychain, sends Now Playing updates when playback starts, and scrobbles a track after it has been played for at least half its duration or four minutes, whichever comes first.
+
+The Last.fm API requires an API key and shared secret, one per application registered at [last.fm/api/account/create](https://www.last.fm/api/account/create). Rather than building these into the app, enter your own in the Last.fm tab of Preferences; they're stored in the macOS Keychain alongside the session key.
+
+
 Submariner is a Subsonic client for Mac. Originally developed by Rafaël Warnault, it was no longer maintained, and in 2012, he released it under a 3-clause BSD license.
 
 As of 2022, I (Calvin Buckley) am fixing it up for modern macOS and Subsonic implementations. The goal is fix issues regarding compatibility, fix old bugs, add new features, modernize the application, and see what direction it should be taken in with Rafaël.
