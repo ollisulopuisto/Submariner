@@ -45,6 +45,10 @@
 	<true/>
 	<key>OSAScriptingDefinition</key>
 	<string>Submariner.sdef</string>
+	<key>LastFMAPIKey</key>
+	<string>$(LASTFM_API_KEY)</string>
+	<key>LastFMAPISecret</key>
+	<string>$(LASTFM_API_SECRET)</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

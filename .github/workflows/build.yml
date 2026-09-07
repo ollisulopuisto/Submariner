@@ -6,7 +6,9 @@ name: Git Release
 on: [push]
 jobs:
   build:
-    runs-on: macos-13
+    runs-on: macos-15
+    permissions:
+      contents: write # needed to publish/update the "latest" GitHub Release below
     env:
       XCODE_DERIVEDDATA_PATH: build
     steps:
@@ -26,3 +28,22 @@ jobs:
         with:
           name: Submariner-${{ github.sha }}
           path: ${{ env.XCODE_DERIVEDDATA_PATH }}/Submariner-${{ github.sha }}.zip
+      # actions/upload-artifact output expires after 90 days and needs a GitHub
+      # login to download. Publish a standing GitHub Release too, so there's
+      # always one link anyone can download without an account. Rebuilt from
+      # master on every push; kept as a pre-release since the app is unsigned
+      # and unnotarized (see note at top of this file).
+      - name: Publish Latest Release
+        if: github.ref == 'refs/heads/master'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp "$XCODE_DERIVEDDATA_PATH/Submariner-$GITHUB_SHA.zip" "$XCODE_DERIVEDDATA_PATH/Submariner-macOS.zip"
+          gh release delete latest --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" || true
+          gh release create latest \
+            "$XCODE_DERIVEDDATA_PATH/Submariner-macOS.zip" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Latest build" \
+            --prerelease \
+            --notes "Automatic build of the latest master commit ($GITHUB_SHA). Unsigned and unnotarized — for testing, not for distribution. Replaced on every push to master."

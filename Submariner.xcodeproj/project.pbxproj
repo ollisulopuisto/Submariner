@@ -150,7 +150,20 @@
 		4CFB3EF8139D47EA008DC01A /* SBViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CFB3EF7139D47EA008DC01A /* SBViewController.m */; };
 		4CFCE444140257EE00D35770 /* MusicSearch.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4CFCE443140257EE00D35770 /* MusicSearch.xib */; };
 		4CFCE4471402582400D35770 /* SBMusicSearchController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CFCE4461402582400D35770 /* SBMusicSearchController.m */; };
+		875AD2999E7DD0131A6C0DDD /* SBLastFMTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4720DAB61C57842E308C8F58 /* SBLastFMTests.swift */; };
+		A10000010000000000000001 /* SBLastFM.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000020000000000000001 /* SBLastFM.swift */; };
+		B2AD16AF2980B75D6C0350E2 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2EDE382900BEE5181F99302A /* Cocoa.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C702AFC000FAEF9EB1F71489 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4C87ED56139CD8BE0064DE2E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4C87ED5E139CD8BE0064DE2E;
+			remoteInfo = Submariner;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		4CFB3E99139D10E0008DC01A /* Copy Frameworks */ = {
@@ -166,6 +179,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2EDE382900BEE5181F99302A /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
 		3E04F5EA2B7043F600E24E56 /* SBMergeArtistsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SBMergeArtistsController.swift; sourceTree = "<group>"; };
 		3E04F5EC2B70487200E24E56 /* SBAddServerPlaylistController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SBAddServerPlaylistController.swift; sourceTree = "<group>"; };
 		3E04F5EE2B71D46E00E24E56 /* Submariner v5.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Submariner v5.xcdatamodel"; sourceTree = "<group>"; };
@@ -286,6 +300,7 @@
 		3EF978012BC3C4E300C986E9 /* SBMessageTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SBMessageTextView.swift; sourceTree = "<group>"; };
 		3EF978032BC4659B00C986E9 /* Binding+Nil.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+Nil.swift"; sourceTree = "<group>"; };
 		3EF978052BC49A9100C986E9 /* SBPropertyFieldView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SBPropertyFieldView.swift; sourceTree = "<group>"; };
+		4720DAB61C57842E308C8F58 /* SBLastFMTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SBLastFMTests.swift; path = SBLastFMTests.swift; sourceTree = "<group>"; };
 		4C4DE62213A200AA006A1EC1 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		4C4DE62313A200AC006A1EC1 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		4C56868314050B9A00BE3478 /* SBPodcastItemView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBPodcastItemView.h; sourceTree = "<group>"; };
@@ -345,6 +360,8 @@
 		4CFCE443140257EE00D35770 /* MusicSearch.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MusicSearch.xib; sourceTree = "<group>"; };
 		4CFCE4451402582400D35770 /* SBMusicSearchController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SBMusicSearchController.h; sourceTree = "<group>"; };
 		4CFCE4461402582400D35770 /* SBMusicSearchController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SBMusicSearchController.m; sourceTree = "<group>"; };
+		785E62D959D49FADC0932CF7 /* SubmarinerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SubmarinerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000020000000000000001 /* SBLastFM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SBLastFM.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -363,6 +380,14 @@
 				3E94E5F82915AAB80080FDF6 /* AVKit.framework in Frameworks */,
 				4C87ED64139CD8BE0064DE2E /* Cocoa.framework in Frameworks */,
 				3E82701827E653F0007E5695 /* MediaPlayer.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		674679705911BDC3D7F0AAB7 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B2AD16AF2980B75D6C0350E2 /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -450,6 +475,7 @@
 				4CD55EC01490CF15002E4774 /* Libraries */,
 				4C87ED62139CD8BE0064DE2E /* Frameworks */,
 				4C87ED60139CD8BE0064DE2E /* Products */,
+				A42A2AB9C5A86AAF0B59E445 /* SubmarinerTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -457,6 +483,7 @@
 			isa = PBXGroup;
 			children = (
 				4C87ED5F139CD8BE0064DE2E /* Submariner.app */,
+				785E62D959D49FADC0932CF7 /* SubmarinerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -477,6 +504,7 @@
 				4C7AA246139D619F0050BE95 /* Quartz.framework */,
 				4C87ED63139CD8BE0064DE2E /* Cocoa.framework */,
 				4C87ED65139CD8BE0064DE2E /* Other Frameworks */,
+				96B7D13E695C0EA07487FB26 /* OS X */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -693,6 +721,7 @@
 			isa = PBXGroup;
 			children = (
 				3E70B2E02A2D52A1002C0B93 /* SBPlayer.swift */,
+				A10000020000000000000001 /* SBLastFM.swift */,
 				3E2155112B26E6F0004BCCFC /* SBSubsonicRequestType.swift */,
 			);
 			name = Subsonic;
@@ -753,6 +782,23 @@
 			name = "View Controllers";
 			sourceTree = "<group>";
 		};
+		96B7D13E695C0EA07487FB26 /* OS X */ = {
+			isa = PBXGroup;
+			children = (
+				2EDE382900BEE5181F99302A /* Cocoa.framework */,
+			);
+			name = "OS X";
+			sourceTree = "<group>";
+		};
+		A42A2AB9C5A86AAF0B59E445 /* SubmarinerTests */ = {
+			isa = PBXGroup;
+			children = (
+				4720DAB61C57842E308C8F58 /* SBLastFMTests.swift */,
+			);
+			name = SubmarinerTests;
+			path = SubmarinerTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -773,6 +819,24 @@
 			productName = Submariner;
 			productReference = 4C87ED5F139CD8BE0064DE2E /* Submariner.app */;
 			productType = "com.apple.product-type.application";
+		};
+		B6A20103734B91B7961C2A24 /* SubmarinerTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 06ED8955ABEB0706D7EB40D4 /* Build configuration list for PBXNativeTarget "SubmarinerTests" */;
+			buildPhases = (
+				A634BF578E8DEAB7D1EBFA7A /* Sources */,
+				674679705911BDC3D7F0AAB7 /* Frameworks */,
+				1F71494CD0D4B96B217E6C35 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0C035AC067D954525872FCB1 /* PBXTargetDependency */,
+			);
+			name = SubmarinerTests;
+			productName = SubmarinerTests;
+			productReference = 785E62D959D49FADC0932CF7 /* SubmarinerTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -804,11 +868,19 @@
 			projectRoot = "";
 			targets = (
 				4C87ED5E139CD8BE0064DE2E /* Submariner */,
+				B6A20103734B91B7961C2A24 /* SubmarinerTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		1F71494CD0D4B96B217E6C35 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4C87ED5D139CD8BE0064DE2E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -934,6 +1006,7 @@
 				4CFAFC38139EF20600E82B57 /* MGRecessedPopUpButtonCell.m in Sources */,
 				3E94E5FA2915AB130080FDF6 /* SBRoutePickerView.swift in Sources */,
 				3E70B2E12A2D52A1002C0B93 /* SBPlayer.swift in Sources */,
+				A10000010000000000000001 /* SBLastFM.swift in Sources */,
 				3EC03B4C29F4F2E0001FDE50 /* SBServer.swift in Sources */,
 				3E04F6422B7DE48400E24E56 /* SBPlayCommand.swift in Sources */,
 				3E2F86CB28DD36E600C5CE23 /* SBMonospaceTextField.swift in Sources */,
@@ -958,7 +1031,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A634BF578E8DEAB7D1EBFA7A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				875AD2999E7DD0131A6C0DDD /* SBLastFMTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0C035AC067D954525872FCB1 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Submariner;
+			target = 4C87ED5E139CD8BE0064DE2E /* Submariner */;
+			targetProxy = C702AFC000FAEF9EB1F71489 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		4C87ED6C139CD8BE0064DE2E /* InfoPlist.strings */ = {
@@ -988,6 +1078,26 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		203D30749F58D4639C943438 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "fr.read-write.SubmarinerTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Submariner.app/Contents/MacOS/Submariner";
+			};
+			name = Release;
+		};
 		4C87ED7E139CD8BE0064DE2E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1107,6 +1217,7 @@
 				COPY_PHASE_STRIP = NO;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_TESTABILITY = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)\"",
@@ -1119,6 +1230,8 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "Submariner/Submariner-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				LASTFM_API_KEY = "";
+				LASTFM_API_SECRET = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@loader_path/../Frameworks",
 					"@executable_path/../Frameworks",
@@ -1167,6 +1280,8 @@
 				GCC_VERSION = "";
 				INFOPLIST_FILE = "Submariner/Submariner-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
+				LASTFM_API_KEY = "";
+				LASTFM_API_SECRET = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"@loader_path/../Frameworks",
 					"@executable_path/../Frameworks",
@@ -1183,9 +1298,38 @@
 			};
 			name = Release;
 		};
+		9978AB48F42E57B134259019 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "fr.read-write.SubmarinerTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Submariner.app/Contents/MacOS/Submariner";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		06ED8955ABEB0706D7EB40D4 /* Build configuration list for PBXNativeTarget "SubmarinerTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				203D30749F58D4639C943438 /* Release */,
+				9978AB48F42E57B134259019 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		4C87ED59139CD8BE0064DE2E /* Build configuration list for PBXProject "Submariner" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

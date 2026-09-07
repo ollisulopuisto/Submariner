@@ -1,0 +1,193 @@
+# Heavy/strict SwiftLint configuration.
+#
+# Scope: this is a decades-old imported codebase (Submariner, upstream
+# https://github.com/ollisulopuisto/Submariner) with a large amount of
+# pre-existing Objective-C-era Swift (~1800 warnings as of writing). Rather
+# than drown the signal in legacy noise, or silently skip enforcement
+# altogether, this ruleset applies in full to the whole tree, but the
+# `excluded` list at the bottom carves out the not-yet-cleaned-up legacy
+# files. New files and the locally patched Last.fm feature are NOT
+# excluded and must pass `swiftlint lint --strict` (see
+# .github/workflows/test.yml). Remove entries from `excluded` as files get
+# cleaned up; never add new ones.
+
+opt_in_rules:
+  - array_init
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - convenience_type
+  - discouraged_optional_boolean
+  - empty_count
+  - empty_string
+  - explicit_init
+  - fallthrough
+  - fatal_error_message
+  - first_where
+  - flatmap_over_map_reduce
+  - force_unwrapping
+  - identical_operands
+  - joined_default_parameter
+  - last_where
+  - legacy_random
+  - literal_expression_end_indentation
+  - lower_acl_than_parent
+  - modifier_order
+  - multiline_arguments
+  - multiline_parameters
+  - operator_usage_whitespace
+  - overridden_super_call
+  - pattern_matching_keywords
+  - prefer_self_type_over_type_of_self
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - single_test_class
+  - sorted_first_last
+  - static_operator
+  - strict_fileprivate
+  - toggle_bool
+  - unavailable_function
+  - unneeded_parentheses_in_closure_argument
+  - vertical_whitespace_closing_braces
+  - vertical_whitespace_opening_braces
+  - yoda_condition
+
+disabled_rules:
+  - todo # tracked separately; noisy on an inherited codebase
+
+line_length:
+  warning: 160
+  error: 220
+
+function_body_length:
+  warning: 80
+  error: 150
+
+cyclomatic_complexity:
+  warning: 15
+  error: 25
+
+type_body_length:
+  warning: 400
+  error: 600
+
+file_length:
+  warning: 700
+  error: 1000
+
+identifier_name:
+  min_length: 2
+  excluded:
+    - id
+
+excluded:
+  - Submariner.xcodeproj
+  - build
+  - upstream
+  # Pre-existing files inherited from upstream, not yet brought up to this
+  # ruleset. New and locally-patched files (SBLastFM.swift,
+  # SBPreferencesController.swift, SubmarinerTests/) are NOT listed here
+  # and must stay clean under `swiftlint lint --strict`. Remove entries as
+  # files get cleaned up; do not add new files to this list.
+  - Submariner/Array+QueryItem.swift
+  - Submariner/Binding+Nil.swift
+  - Submariner/Collection+IndexSet.swift
+  - Submariner/Data+Random.swift
+  - Submariner/Data+Type.swift
+  - Submariner/MutableCollection+Move.swift
+  - Submariner/NSManagedObjectContext+Fetch.swift
+  - Submariner/NSPasteboard+Library.swift
+  - Submariner/NSString+Comparison.swift
+  - Submariner/NSTreeController+IndexPath.swift
+  - Submariner/OperationQueue+Shared.swift
+  - Submariner/PasteboardType+Submariner.swift
+  - Submariner/SBAddServerPlaylistController.swift
+  - Submariner/SBAlbum.swift
+  - Submariner/SBAlbumViewItem.swift
+  - Submariner/SBAppDelegate.swift
+  - Submariner/SBApplication.swift
+  - Submariner/SBArtist.swift
+  - Submariner/SBAudioMetadata.swift
+  - Submariner/SBCollectionView.swift
+  - Submariner/SBCollectionViewFlowLayout.swift
+  - Submariner/SBCover.swift
+  - Submariner/SBCover+CoreDataProperties.swift
+  - Submariner/SBDirectory.swift
+  - Submariner/SBDownloads.swift
+  - Submariner/SBDownloadsController.swift
+  - Submariner/SBEditServerController.swift
+  - Submariner/SBEpisode.swift
+  - Submariner/SBGroup.swift
+  - Submariner/SBHome.swift
+  - Submariner/SBImportOperation.swift
+  - Submariner/SBIndex.swift
+  - Submariner/SBInspectorController.swift
+  - Submariner/SBJumpToTimestampController.swift
+  - Submariner/SBLibrary.swift
+  - Submariner/SBLibraryCleanupCoverPathsOperation.swift
+  - Submariner/SBLibraryCleanupOrphansOperation.swift
+  - Submariner/SBLibraryItemPasteboardWriter.swift
+  - Submariner/SBLibraryPasteboardWriter.swift
+  - Submariner/SBLibraryPurgeOperation.swift
+  - Submariner/SBMergeArtistsController.swift
+  - Submariner/SBMessageTextView.swift
+  - Submariner/SBMonospaceTextField.swift
+  - Submariner/SBMusicItem.swift
+  - Submariner/SBMusicItem+CoreDataProperties.swift
+  - Submariner/SBNavigationItem.swift
+  - Submariner/SBNextTrackCommand.swift
+  - Submariner/SBNowPlaying.swift
+  - Submariner/SBOnboardingController.swift
+  - Submariner/SBOperation.swift
+  - Submariner/SBPauseCommand.swift
+  - Submariner/SBPlayCommand.swift
+  - Submariner/SBPlayer.swift
+  - Submariner/SBPlaylist.swift
+  - Submariner/SBPlaylistController.swift
+  - Submariner/SBPlaylistPasteboardWriter.swift
+  - Submariner/SBPlaylistV8MigrationPolicy.swift
+  - Submariner/SBPlayRateController.swift
+  - Submariner/SBPodcast.swift
+  - Submariner/SBPreviousTrackCommand.swift
+  - Submariner/SBPropertyFieldView.swift
+  - Submariner/SBRatingView.swift
+  - Submariner/SBRepeatIconTransformer.swift
+  - Submariner/SBRepeatModeButtonStateTransformer.swift
+  - Submariner/SBRepeatModeTransformer.swift
+  - Submariner/SBResource.swift
+  - Submariner/SBRoutePickerView.swift
+  - Submariner/SBSearchResult.swift
+  - Submariner/SBSection.swift
+  - Submariner/SBServer.swift
+  - Submariner/SBServer+CoreDataProperties.swift
+  - Submariner/SBServerDirectoryController.swift
+  - Submariner/SBServerSearchController.swift
+  - Submariner/SBServerUserViewController.swift
+  - Submariner/SBSourceListRowView.swift
+  - Submariner/SBSourceListViewItem.swift
+  - Submariner/SBStarrable.swift
+  - Submariner/SBSubsonicDownloadOperation.swift
+  - Submariner/SBSubsonicParsingOperation.swift
+  - Submariner/SBSubsonicRequestOperation.swift
+  - Submariner/SBSubsonicRequestType.swift
+  - Submariner/SBTableView+DragImage.swift
+  - Submariner/SBToggleNameTransformer.swift
+  - Submariner/SBTrack.swift
+  - Submariner/SBTrackArtistNameTransformer.swift
+  - Submariner/SBTracklist.swift
+  - Submariner/SBTracklistButton.swift
+  - Submariner/SBTracklistController.swift
+  - Submariner/SBTrackListLengthTransformer.swift
+  - Submariner/SBVolumeButton.swift
+  - Submariner/SBVolumeIconTransformer.swift
+  - Submariner/String+File.swift
+  - Submariner/String+Hex.swift
+  - Submariner/String+Time.swift
+  - Submariner/Synchronized.swift
+  - Submariner/URL+Parameters.swift
+  - Submariner/UserDefaults+Submariner.swift
+  - Submariner/UTType+AudioToolbox.swift
+  - Submariner/View+Modify.swift

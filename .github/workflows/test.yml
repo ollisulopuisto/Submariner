@@ -1,0 +1,20 @@
+name: Test & Lint
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Run Unit Tests
+        run: >
+          xcodebuild test
+          -project Submariner.xcodeproj -scheme Submariner
+          -destination 'platform=macOS'
+          CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=
+      - name: Install SwiftLint
+        run: brew install swiftlint
+      - name: Lint
+        run: swiftlint lint --strict
