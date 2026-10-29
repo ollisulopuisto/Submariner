@@ -391,11 +391,13 @@ public class SBServer: SBResource {
                 parameters.removeValue(forKey: "p")
                 let salt = String.hexStringFrom(bytes: saltBytes)
                 parameters["s"] = salt
-                // Subsonic's token auth historically uses t = md5(password + salt), but
-                // MD5 is cryptographically broken and inappropriate for any
-                // password-derived value. Use SHA-256 instead to avoid weak hashing.
-                // (This changes the token algorithm; the server must accept it.)
-                let token = (password + salt).sha256()
+                // The Subsonic API *requires* t = md5(password + salt) for token
+                // auth; servers do not accept any other digest, so this is a
+                // protocol constraint, not a choice. (CodeQL flags the MD5 as
+                // swift/weak-password-hashing; it cannot be replaced without
+                // breaking authentication. The salt is a per-request random
+                // nonce, so this is not password storage.)
+                let token = (password + salt).md5()
                 parameters["t"] = token
             } else {
                 parameters.removeValue(forKey: "t")

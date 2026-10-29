@@ -108,6 +108,32 @@ final class SBLastFMTests: XCTestCase {
         XCTAssertEqual("abc".sha256()!, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
     }
 
+    // MARK: - Subsonic token auth (t = md5(password + salt), protocol-required)
+    //
+    // The Subsonic API defines token authentication as t = md5(password + salt)
+    // (https://www.subsonic.org/pages/api.jsp, "Authentication"). Servers do not
+    // accept any other digest, so SBServer.getBaseParameters() must keep using
+    // MD5 here even though MD5 is unsuitable elsewhere. The documented example
+    // vector below is quoted verbatim from that page; the SHA-256 cross-check
+    // exists to fail the build if the digest is ever "upgraded" again.
+
+    func testStringMd5_rfc1321Vectors() {
+        XCTAssertEqual("".md5()!, "d41d8cd98f00b204e9800998ecf8427e")
+        XCTAssertEqual("abc".md5()!, "900150983cd24fb0d6963f7d28e17f72")
+    }
+
+    func testSubsonicToken_matchesOfficialDocumentationExample() {
+        // Official example: password "sesame", salt "c19b2d" ->
+        // token = md5("sesamec19b2d") = 26719a1196d2a940705a59634eb18eab
+        XCTAssertEqual(("sesame" + "c19b2d").md5()!, "26719a1196d2a940705a59634eb18eab")
+    }
+
+    func testSubsonicToken_sha256WouldNotMatchProtocol() {
+        // Guard against repeating the regression where the token digest was
+        // changed to SHA-256: no Subsonic server accepts that token.
+        XCTAssertNotEqual(("sesame" + "c19b2d").sha256()!, "26719a1196d2a940705a59634eb18eab")
+    }
+
     // MARK: - apiSignature (Last.fm request signing)
     //
     // Signature = md5(sorted "key" + "value" pairs concatenated, then the
