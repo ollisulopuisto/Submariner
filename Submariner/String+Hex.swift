@@ -20,6 +20,16 @@ extension String {
         return nil
     }
     
+    func sha256() -> String? {
+        if let data = self.data(using: .utf8) {
+            let hash = SHA256.hash(data: data)
+            // stringify
+            let str = hash.map({ String(format: "%02x", $0) }).joined()
+            return str
+        }
+        return nil
+    }
+    
     func toHex() -> String? {
         if let data = self.data(using: .utf8) {
             return String.hexStringFrom(bytes: data)

@@ -98,6 +98,16 @@ final class SBLastFMTests: XCTestCase {
         XCTAssertEqual(SBLastFM.md5Hex("abc"), "900150983cd24fb0d6963f7d28e17f72")
     }
 
+    // MARK: - sha256 (NIST FIPS 180-4 test vectors)
+
+    func testStringSha256_emptyString() {
+        XCTAssertEqual("".sha256()!, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    }
+
+    func testStringSha256_abc() {
+        XCTAssertEqual("abc".sha256()!, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+    }
+
     // MARK: - apiSignature (Last.fm request signing)
     //
     // Signature = md5(sorted "key" + "value" pairs concatenated, then the

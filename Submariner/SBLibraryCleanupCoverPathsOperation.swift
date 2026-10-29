@@ -66,7 +66,9 @@ class SBLibraryCleanupCoverPathsOperation: SBOperation {
                 logger.warning("Absolute cover path but for wrong server?: \(currentPath)")
                 // Try to reset a cross-linked path
                 // Remove the prefix (and the / after the prefix), but keep directory structure in case
-                let pathWithoutPrefix = currentPath.substring(from: baseCoverDir.path.count + 1)
+                // NSString indexes are UTF-16 code units, so use utf16.count (not String.count, which
+                // counts extended grapheme clusters and diverges for characters outside the BMP).
+                let pathWithoutPrefix = currentPath.substring(from: baseCoverDir.path.utf16.count + 1)
                 let newPath = coversDir.appendingPathComponent(pathWithoutPrefix)
                 replaceCoverPath(cover: cover, currentPath: currentPath, newPath: newPath, fileName: pathWithoutPrefix)
             } else {
