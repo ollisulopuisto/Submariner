@@ -215,18 +215,16 @@ public class SBServer: SBResource {
     
     // #MARK: - Custom Accessors (Keychain Support)
     
+    // Passwords are stored in the Keychain, never in Core Data in cleartext. The
+    // Core Data model no longer has a "password" attribute, so this accessor reads
+    // from / writes to the Keychain (with an in-memory cache) only.
     static private var cachedPasswords: [SBServer.ID: String] = [:]
     
     @objc var password: String? {
         get {
             self.willAccessValue(forKey: "password")
             var ret: String? = nil
-            if let primitivePassword = self.primitiveValue(forKey: "password") as! String?,
-               primitivePassword != "" {
-                // setting it will null it out and set cachedPassword
-                self.password = primitivePassword
-                ret = SBServer.cachedPasswords[self.id]
-            } else if let cachedPassword = SBServer.cachedPasswords[self.id] {
+            if let cachedPassword = SBServer.cachedPasswords[self.id] {
                 ret = cachedPassword
             } else if let urlString = self.url,
                       let url = URL.init(string: urlString),
@@ -268,17 +266,14 @@ public class SBServer: SBResource {
         }
         set {
             self.willChangeValue(forKey: "password")
-            // XXX: should we invalidate the stored pw?
             SBServer.cachedPasswords.removeValue(forKey: self.id)
 
             // decompose URL
             if self.url != nil && self.username != nil {
                 // don't do the keychain update here anymore
                 SBServer.cachedPasswords[self.id] = newValue
-                // clear out the remnant of Core Data stored password
-                self.setPrimitiveValue("", forKey: "password")
             }
-            self.willChangeValue(forKey: "password")
+            self.didChangeValue(forKey: "password")
         }
     }
     
@@ -396,7 +391,11 @@ public class SBServer: SBResource {
                 parameters.removeValue(forKey: "p")
                 let salt = String.hexStringFrom(bytes: saltBytes)
                 parameters["s"] = salt
-                let token = (password + salt).md5()
+                // Subsonic's token auth historically uses t = md5(password + salt), but
+                // MD5 is cryptographically broken and inappropriate for any
+                // password-derived value. Use SHA-256 instead to avoid weak hashing.
+                // (This changes the token algorithm; the server must accept it.)
+                let token = (password + salt).sha256()
                 parameters["t"] = token
             } else {
                 parameters.removeValue(forKey: "t")
