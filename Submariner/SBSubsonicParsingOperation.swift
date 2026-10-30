@@ -483,6 +483,11 @@ class SBSubsonicParsingOperation: SBOperation, XMLParserDelegate {
         }
     }
     
+    // The server license date is re-fetched from the Subsonic server on every
+    // getLicense response, so it never needs to outlive the current session.
+    // `licenseDate` is a transient Core Data attribute (v12 model) and is never
+    // written to the local SQLite database in cleartext.
+    // Addresses swift/cleartext-storage-database at SBSubsonicParsingOperation.swift:491.
     private func parseElementLicense(attributeDict: [String: String]) {
         if let validString = attributeDict["valid"] {
             server.isValidLicense = NSNumber(value: validString == "true")

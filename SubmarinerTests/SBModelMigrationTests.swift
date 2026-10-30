@@ -88,4 +88,52 @@ final class SBModelMigrationTests: XCTestCase {
         XCTAssertFalse(raw.contains(Data("legacy-secret".utf8)),
                        "legacy cleartext password still present in the migrated store file")
     }
+
+    func testV11StoreMigratesToV12DroppingCleartextLicenseDate() throws {
+        guard let v11 = modelVersion("Submariner v11"),
+              let v12 = modelVersion("Submariner v12") else {
+            XCTFail("Could not load versioned managed object models from the test bundle")
+            return
+        }
+        // Precondition: v11 still has licenseDate as a persistent attribute,
+        // v12 makes it transient.
+        XCTAssertNotNil(v11.entitiesByName["Server"]?.attributesByName["licenseDate"],
+                        "v11 model unexpectedly lacks the licenseDate attribute - is this test stale?")
+        XCTAssertNotNil(v12.entitiesByName["Server"]?.attributesByName["licenseDate"],
+                        "v12 model unexpectedly lacks the licenseDate attribute - is this test stale?")
+        let licenseDateAttrV11 = v11.entitiesByName["Server"]?.attributesByName["licenseDate"]
+        XCTAssertFalse(licenseDateAttrV11?.isTransient ?? true,
+                       "v11 licenseDate must be persistent (not transient)")
+        let licenseDateAttrV12 = v12.entitiesByName["Server"]?.attributesByName["licenseDate"]
+        XCTAssertTrue(licenseDateAttrV12?.isTransient ?? false,
+                      "v12 licenseDate must be transient")
+
+        let storeURL = tempDir.appendingPathComponent("migration-test-license-date.sqlite")
+
+        // 1. Create a v11 store holding a cleartext licenseDate.
+        let psc11 = NSPersistentStoreCoordinator(managedObjectModel: v11)
+        try psc11.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL)
+        let moc11 = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        moc11.persistentStoreCoordinator = psc11
+        let server = NSEntityDescription.insertNewObject(forEntityName: "Server", into: moc11)
+        server.setPrimitiveValue(Date.distantPast, forKey: "licenseDate")
+        try moc11.save()
+
+        // 2. Reopen with the v12 model using automatic lightweight migration.
+        let psc12 = NSPersistentStoreCoordinator(managedObjectModel: v12)
+        let options: [NSPersistentStoreDescription.OptionKey: Any] = [
+            NSInferMappingModelAutomaticallyOption: true,
+            NSMigratePersistentStoresAutomaticallyOption: true
+        ]
+        try psc12.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL, options: options)
+        let moc12 = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        moc12.persistentStoreCoordinator = psc12
+
+        // 3. Migration succeeds, the server row survives, but licenseDate
+        //    is no longer a stored attribute.
+        let servers = try moc12.fetch(NSFetchRequest<NSManagedObject>(entityName: "Server"))
+        XCTAssertEqual(servers.count, 1, "server row must survive migration")
+        XCTAssertNil(servers.first?.entity.attributesByName["licenseDate"],
+                     "licenseDate must not be a stored attribute after v11 -> v12 migration")
+    }
 }
