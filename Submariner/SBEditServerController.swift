@@ -90,6 +90,8 @@ import Cocoa
             server.resourceName = oldName;
             server.url = oldURL;
             server.username = oldUsername;
+            // `password` is keychain-backed (see SBServer.password): restoring it here
+            // writes to the Keychain, never to Core Data in cleartext.
             server.password = oldPassword;
             server.useTokenAuth = oldToken;
             self.managedObjectContext.commitEditing()
