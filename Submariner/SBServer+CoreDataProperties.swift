@@ -18,9 +18,6 @@ extension SBServer {
     }
 
     @NSManaged public var apiVersion: String?
-    // licenseEmail is a transient Core Data attribute: it lives only in memory
-    // for the current session and is never persisted to the local database.
-    @NSManaged public var licenseEmail: String?
     @NSManaged public var useTokenAuth: NSNumber?
     @NSManaged public var lastIndexesDate: Date?
     @NSManaged public var licenseDate: Date?
