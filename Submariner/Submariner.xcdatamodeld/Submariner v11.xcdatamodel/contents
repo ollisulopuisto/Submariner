@@ -156,7 +156,7 @@
         <attribute name="isValidLicense" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="NO"/>
         <attribute name="lastIndexesDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="licenseDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="licenseEmail" optional="YES" attributeType="String" defaultValueString="Unvalid License"/>
+        <attribute name="licenseEmail" optional="YES" attributeType="String" defaultValueString="Unvalid License" transient="YES"/>
         <attribute name="url" optional="YES" attributeType="String"/>
         <attribute name="username" optional="YES" attributeType="String"/>
         <attribute name="useTokenAuth" optional="YES" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="NO"/>

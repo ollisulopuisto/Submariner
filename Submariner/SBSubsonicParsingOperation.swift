@@ -487,6 +487,12 @@ class SBSubsonicParsingOperation: SBOperation, XMLParserDelegate {
         if let validString = attributeDict["valid"] {
             server.isValidLicense = NSNumber(value: validString == "true")
         }
+        // The license email is held only in memory for the current session:
+        // the `licenseEmail` Core Data attribute is transient (see the xcdatamodel),
+        // so it is never written to the local SQLite database. It is re-fetched
+        // from the server on every `getLicense` response. This avoids cleartext
+        // storage of personal information in the local database.
+        //
         // note that these can be empty which can confuse user if we don't set them
         if let email = attributeDict["email"] {
             server.licenseEmail = email
