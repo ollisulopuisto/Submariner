@@ -393,10 +393,11 @@ public class SBServer: SBResource {
                 parameters["s"] = salt
                 // The Subsonic API *requires* t = md5(password + salt) for token
                 // auth; servers do not accept any other digest, so this is a
-                // protocol constraint, not a choice. (CodeQL flags the MD5 as
-                // swift/weak-password-hashing; it cannot be replaced without
-                // breaking authentication. The salt is a per-request random
-                // nonce, so this is not password storage.)
+                // protocol constraint, not a choice. MD5 here is a per-request
+                // token digest with a random salt nonce, not password hashing for
+                // storage. (CodeQL flags this as swift/weak-password-hashing; it
+                // cannot be replaced without breaking authentication. Accepted
+                // risk — see SECURITY.md.)
                 let token = (password + salt).md5()
                 parameters["t"] = token
             } else {
