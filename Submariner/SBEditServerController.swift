@@ -92,6 +92,7 @@ import Cocoa
             server.username = oldUsername;
             // `password` is keychain-backed (see SBServer.password): restoring it here
             // writes to the Keychain, never to Core Data in cleartext.
+            // Accepted risk / CodeQL false positive — see SECURITY.md ("Accepted risks").
             server.password = oldPassword;
             server.useTokenAuth = oldToken;
             self.managedObjectContext.commitEditing()
