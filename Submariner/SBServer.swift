@@ -398,6 +398,8 @@ public class SBServer: SBResource {
                 // storage. (CodeQL flags this as swift/weak-password-hashing; it
                 // cannot be replaced without breaking authentication. Accepted
                 // risk — see SECURITY.md.)
+                // CodeQL: swift/weak-password-hashing —
+                // https://github.com/ollisulopuisto/Submariner/security/code-scanning/2
                 let token = (password + salt).md5()
                 parameters["t"] = token
             } else {
