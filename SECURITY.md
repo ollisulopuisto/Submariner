@@ -19,7 +19,7 @@ Server passwords are **never** stored in Core Data (the local SQLite database) i
 The Subsonic API defines token authentication as `t = md5(password + salt)`, where `salt` is a per-request random nonce. This is a **protocol constraint**, not a choice:
 
 - Subsonic servers do not accept any other digest for token authentication, so MD5 cannot be replaced without breaking authentication with every Subsonic server.
-- This is a per-request token digest, **not** password storage. The password itself is never transmitted or stored via MD5 (see `Submariner/SBServer.swift:400`).
+- This is a per-request token digest, **not** password storage. The password itself is never transmitted or stored via MD5 (see `Submariner/SBServer.swift:401`).
 
 ## Accepted risks / CodeQL false positives
 
@@ -28,7 +28,7 @@ The following CodeQL findings are intentionally accepted and documented. They ca
 | Finding | Location | Reason accepted |
 | ------- | -------- | --------------- |
 | `swift/cleartext-storage-database` — Cleartext storage of sensitive information in a local database | `Submariner/SBEditServerController.swift:96` | The password is Keychain-backed via `SBServer.password`; nothing is written to the local database in cleartext. |
-| `swift/weak-password-hashing` — Use of an inappropriate cryptographic hashing algorithm on passwords | `Submariner/SBServer.swift:400` | MD5 is mandated by the Subsonic token-auth protocol (`t = md5(password + salt)` with a per-request random salt). It is a token digest, not password hashing for storage. |
+| `swift/weak-password-hashing` — Use of an inappropriate cryptographic hashing algorithm on passwords | `Submariner/SBServer.swift:401` | MD5 is mandated by the Subsonic token-auth protocol (`t = md5(password + salt)` with a per-request random salt). It is a token digest, not password hashing for storage. |
 
 ## Reporting a vulnerability
 
