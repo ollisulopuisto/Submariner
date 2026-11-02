@@ -10,7 +10,6 @@ import XCTest
 @testable import Submariner
 
 final class SBModelMigrationTests: XCTestCase {
-
     private var tempDir: URL!
 
     override func setUpWithError() throws {
