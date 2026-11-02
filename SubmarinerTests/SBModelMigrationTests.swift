@@ -65,7 +65,7 @@ final class SBModelMigrationTests: XCTestCase {
         // 2. Reopen with the v11 model using the same automatic lightweight
         //    migration options the app itself uses (see SBAppDelegate).
         let psc11 = NSPersistentStoreCoordinator(managedObjectModel: v11)
-        let options: [NSPersistentStoreDescription.OptionKey: Any] = [
+        let options: [String: Any] = [
             NSInferMappingModelAutomaticallyOption: true,
             NSMigratePersistentStoresAutomaticallyOption: true
         ]
@@ -85,7 +85,7 @@ final class SBModelMigrationTests: XCTestCase {
         //    retains free pages, check with `PRAGMA secure_delete` and report
         //    instead of deleting the assertion.
         let raw = try Data(contentsOf: storeURL)
-        XCTAssertFalse(raw.contains(Data("legacy-secret".utf8)),
+        XCTAssertFalse(raw.range(of: Data("legacy-secret".utf8)) != nil,
                        "legacy cleartext password still present in the migrated store file")
     }
 
@@ -121,7 +121,7 @@ final class SBModelMigrationTests: XCTestCase {
 
         // 2. Reopen with the v12 model using automatic lightweight migration.
         let psc12 = NSPersistentStoreCoordinator(managedObjectModel: v12)
-        let options: [NSPersistentStoreDescription.OptionKey: Any] = [
+        let options: [String: Any] = [
             NSInferMappingModelAutomaticallyOption: true,
             NSMigratePersistentStoresAutomaticallyOption: true
         ]
