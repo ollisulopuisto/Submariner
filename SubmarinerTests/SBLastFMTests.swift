@@ -100,12 +100,12 @@ final class SBLastFMTests: XCTestCase {
 
     // MARK: - sha256 (NIST FIPS 180-4 test vectors)
 
-    func testStringSha256_emptyString() {
-        XCTAssertEqual("".sha256()!, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+    func testStringSha256_emptyString() throws {
+        XCTAssertEqual(try XCTUnwrap("".sha256()), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
     }
 
-    func testStringSha256_abc() {
-        XCTAssertEqual("abc".sha256()!, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+    func testStringSha256_abc() throws {
+        XCTAssertEqual(try XCTUnwrap("abc".sha256()), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
     }
 
     // MARK: - Subsonic token auth (t = md5(password + salt), protocol-required)
@@ -117,21 +117,21 @@ final class SBLastFMTests: XCTestCase {
     // vector below is quoted verbatim from that page; the SHA-256 cross-check
     // exists to fail the build if the digest is ever "upgraded" again.
 
-    func testStringMd5_rfc1321Vectors() {
-        XCTAssertEqual("".md5()!, "d41d8cd98f00b204e9800998ecf8427e")
-        XCTAssertEqual("abc".md5()!, "900150983cd24fb0d6963f7d28e17f72")
+    func testStringMd5_rfc1321Vectors() throws {
+        XCTAssertEqual(try XCTUnwrap("".md5()), "d41d8cd98f00b204e9800998ecf8427e")
+        XCTAssertEqual(try XCTUnwrap("abc".md5()), "900150983cd24fb0d6963f7d28e17f72")
     }
 
-    func testSubsonicToken_matchesOfficialDocumentationExample() {
+    func testSubsonicToken_matchesOfficialDocumentationExample() throws {
         // Official example: password "sesame", salt "c19b2d" ->
         // token = md5("sesamec19b2d") = 26719a1196d2a940705a59634eb18eab
-        XCTAssertEqual(("sesame" + "c19b2d").md5()!, "26719a1196d2a940705a59634eb18eab")
+        XCTAssertEqual(try XCTUnwrap(("sesame" + "c19b2d").md5()), "26719a1196d2a940705a59634eb18eab")
     }
 
-    func testSubsonicToken_sha256WouldNotMatchProtocol() {
+    func testSubsonicToken_sha256WouldNotMatchProtocol() throws {
         // Guard against repeating the regression where the token digest was
         // changed to SHA-256: no Subsonic server accepts that token.
-        XCTAssertNotEqual(("sesame" + "c19b2d").sha256()!, "26719a1196d2a940705a59634eb18eab")
+        XCTAssertNotEqual(try XCTUnwrap(("sesame" + "c19b2d").sha256()), "26719a1196d2a940705a59634eb18eab")
     }
 
     // MARK: - apiSignature (Last.fm request signing)
