@@ -2,16 +2,11 @@
 //  SBModelMigrationTests.swift
 //  SubmarinerTests
 //
-//  Verifies the Submariner v10 -> v11 Core Data migration. The v10 model
-//  still had a cleartext "password" attribute on the Server entity, left
-//  over from before passwords moved to the Keychain; values written by old
-//  app versions were never read again but stayed in the database file.
-//  v11 removes the attribute so lightweight migration drops that orphaned
-//  credential data from the store.
+//  Verifies migrations using the actual historical model versions and isolated stores.
 //
 
-import XCTest
 import CoreData
+import XCTest
 @testable import Submariner
 
 final class SBModelMigrationTests: XCTestCase {
@@ -32,52 +27,62 @@ final class SBModelMigrationTests: XCTestCase {
     private func modelVersion(_ name: String) -> NSManagedObjectModel? {
         let bundle = Bundle(for: SBServer.self)
         guard let momdURL = bundle.url(forResource: "Submariner", withExtension: "momd") else { return nil }
-        return NSManagedObjectModel(contentsOf: momdURL.appendingPathComponent("\(name).mom"))
+        guard let model = NSManagedObjectModel(contentsOf: momdURL.appendingPathComponent("\(name).mom")) else { return nil }
+        // Historical stores test schema migration, not current subclass lifecycle hooks.
+        // Multiple loaded versions make subclass entity() lookup ambiguous.
+        for entity in model.entities {
+            entity.managedObjectClassName = "NSManagedObject"
+        }
+        return model
     }
 
-    func testV10StoreMigratesToV11DroppingPasswordAttribute() throws {
-        guard let v10 = modelVersion("Submariner v10"),
-              let v11 = modelVersion("Submariner v11") else {
+    func testV9StoreMigratesToV10DroppingPasswordAttribute() throws {
+        guard let v9 = modelVersion("Submariner v9"),
+              let v10 = modelVersion("Submariner v10") else {
             XCTFail("Could not load versioned managed object models from the test bundle")
             return
         }
-        // Precondition: v10 still has the attribute, v11 does not.
-        XCTAssertNotNil(v10.entitiesByName["Server"]?.attributesByName["password"],
-                        "v10 model unexpectedly lacks the password attribute - is this test stale?")
-        XCTAssertNil(v11.entitiesByName["Server"]?.attributesByName["password"],
-                     "v11 model must remove the password attribute")
+        // Precondition: v9 still has the attribute, v10 does not.
+        XCTAssertNotNil(v9.entitiesByName["Server"]?.attributesByName["password"],
+                        "v9 model unexpectedly lacks the password attribute - is this test stale?")
+        XCTAssertNil(v10.entitiesByName["Server"]?.attributesByName["password"],
+                     "v10 model must remove the password attribute")
 
         let storeURL = tempDir.appendingPathComponent("migration-test.sqlite")
 
-        // 1. Create a v10 store holding a legacy cleartext password. Use the
-        //    primitive accessor on purpose: SBServer's custom `password`
-        //    setter writes only to the Keychain cache, but legacy app
-        //    versions wrote through Core Data, which is exactly what the
-        //    primitive write simulates here.
-        let psc10 = NSPersistentStoreCoordinator(managedObjectModel: v10)
-        try psc10.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL)
-        let moc10 = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
-        moc10.persistentStoreCoordinator = psc10
-        let server = NSEntityDescription.insertNewObject(forEntityName: "Server", into: moc10)
+        // Create the historical schema with generic managed objects, bypassing
+        // current application subclasses and their lifecycle side effects.
+        let psc9 = NSPersistentStoreCoordinator(managedObjectModel: v9)
+        defer { for store in psc9.persistentStores { try? psc9.remove(store) } }
+        try psc9.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL)
+        let moc9 = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        moc9.persistentStoreCoordinator = psc9
+        let server = NSEntityDescription.insertNewObject(forEntityName: "Server", into: moc9)
         server.setPrimitiveValue("legacy-secret", forKey: "password")
-        try moc10.save()
+        try moc9.save()
+        moc9.reset()
+        for store in psc9.persistentStores { try psc9.remove(store) }
 
-        // 2. Reopen with the v11 model using the same automatic lightweight
+        // 2. Reopen with the v10 model using the same automatic lightweight
         //    migration options the app itself uses (see SBAppDelegate).
-        let psc11 = NSPersistentStoreCoordinator(managedObjectModel: v11)
+        let psc10 = NSPersistentStoreCoordinator(managedObjectModel: v10)
+        defer { for store in psc10.persistentStores { try? psc10.remove(store) } }
         let options: [String: Any] = [
             NSInferMappingModelAutomaticallyOption: true,
             NSMigratePersistentStoresAutomaticallyOption: true
         ]
-        try psc11.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL, options: options)
-        let moc11 = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
-        moc11.persistentStoreCoordinator = psc11
+        try psc10.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL, options: options)
+        let moc10 = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
+        moc10.persistentStoreCoordinator = psc10
 
         // 3. Migration succeeds, the server row survives, and the password
         //    attribute no longer exists on the entity.
-        let servers = try moc11.fetch(NSFetchRequest<NSManagedObject>(entityName: "Server"))
+        let servers = try moc10.fetch(NSFetchRequest<NSManagedObject>(entityName: "Server"))
         XCTAssertEqual(servers.count, 1, "server row must survive migration")
         XCTAssertNil(servers.first?.entity.attributesByName["password"])
+
+        moc10.reset()
+        for store in psc10.persistentStores { try psc10.remove(store) }
 
         // 4. The migrated store file must not retain the cleartext credential.
         //    Lightweight migration writes a new store, so the old value should
@@ -85,7 +90,7 @@ final class SBModelMigrationTests: XCTestCase {
         //    retains free pages, check with `PRAGMA secure_delete` and report
         //    instead of deleting the assertion.
         let raw = try Data(contentsOf: storeURL)
-        XCTAssertFalse(raw.range(of: Data("legacy-secret".utf8)) != nil,
+        XCTAssertNil(raw.range(of: Data("legacy-secret".utf8)),
                        "legacy cleartext password still present in the migrated store file")
     }
 
@@ -112,15 +117,19 @@ final class SBModelMigrationTests: XCTestCase {
 
         // 1. Create a v11 store holding a cleartext licenseDate.
         let psc11 = NSPersistentStoreCoordinator(managedObjectModel: v11)
+        defer { for store in psc11.persistentStores { try? psc11.remove(store) } }
         try psc11.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: storeURL)
         let moc11 = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
         moc11.persistentStoreCoordinator = psc11
         let server = NSEntityDescription.insertNewObject(forEntityName: "Server", into: moc11)
         server.setPrimitiveValue(Date.distantPast, forKey: "licenseDate")
         try moc11.save()
+        moc11.reset()
+        for store in psc11.persistentStores { try psc11.remove(store) }
 
         // 2. Reopen with the v12 model using automatic lightweight migration.
         let psc12 = NSPersistentStoreCoordinator(managedObjectModel: v12)
+        defer { for store in psc12.persistentStores { try? psc12.remove(store) } }
         let options: [String: Any] = [
             NSInferMappingModelAutomaticallyOption: true,
             NSMigratePersistentStoresAutomaticallyOption: true
@@ -133,7 +142,10 @@ final class SBModelMigrationTests: XCTestCase {
         //    is no longer a stored attribute.
         let servers = try moc12.fetch(NSFetchRequest<NSManagedObject>(entityName: "Server"))
         XCTAssertEqual(servers.count, 1, "server row must survive migration")
-        XCTAssertNil(servers.first?.entity.attributesByName["licenseDate"],
-                     "licenseDate must not be a stored attribute after v11 -> v12 migration")
+        let migratedAttribute = try XCTUnwrap(servers.first?.entity.attributesByName["licenseDate"])
+        XCTAssertTrue(migratedAttribute.isTransient, "licenseDate must not persist after migration")
+        XCTAssertNil(servers.first?.value(forKey: "licenseDate"), "legacy value must not survive migration")
+        moc12.reset()
+        for store in psc12.persistentStores { try psc12.remove(store) }
     }
 }
