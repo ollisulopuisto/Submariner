@@ -1,6 +1,8 @@
-# Note that builds a not-really-signed executable.
-# OK for testing, not so hot for distribution.
-# Find out a better way.
+# The app is built unsigned, then signed after the build with the Developer ID
+# Application certificate from the repository secrets (not notarized yet).
+# The signing identity and team ID are read from the imported certificate, so
+# nothing about the team is committed to the project settings. Without the
+# secrets (e.g. in a fork) the build stays unsigned.
 name: Git Release
 # XXX: other criteria?
 on: [push]
@@ -20,6 +22,41 @@ jobs:
         run: gem install xcpretty --no-document --quiet
       - name: Build Executable
         run: xcodebuild build -configuration Release -project Submariner.xcodeproj -scheme Submariner -arch x86_64 -arch arm64 -derivedDataPath $XCODE_DERIVEDDATA_PATH CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= | xcpretty -c
+      - name: Check signing secrets
+        id: signing
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+        run: |
+          if [ -n "$BUILD_CERTIFICATE_BASE64" ]; then echo "enabled=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Import Developer ID certificate
+        if: steps.signing.outputs.enabled == 'true'
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          cert="$RUNNER_TEMP/build_certificate.p12"
+          keychain="$RUNNER_TEMP/app-signing.keychain-db"
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 -D -o "$cert"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$keychain"
+          security set-keychain-settings -lut 21600 "$keychain"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$keychain"
+          security import "$cert" -P "$P12_PASSWORD" -T /usr/bin/codesign -f pkcs12 -k "$keychain"
+          rm -f "$cert"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$keychain"
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          security find-identity -v -p codesigning "$keychain"
+      - name: Sign Submariner.app
+        if: steps.signing.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+          identity="$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application: .*\)"/\1/p' | head -n 1)"
+          [ -n "$identity" ] || { echo "no Developer ID Application identity found" >&2; exit 1; }
+          app="$XCODE_DERIVEDDATA_PATH/Build/Products/Release/Submariner.app"
+          codesign --force --deep --timestamp --entitlements Submariner/Submariner.entitlements --sign "$identity" "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -d --entitlements - "$app"
       - name: Package Release
         run: ditto -c -k --sequesterRsrc --keepParent "$XCODE_DERIVEDDATA_PATH/Build/Products/Release/Submariner.app" "$XCODE_DERIVEDDATA_PATH/Submariner-$GITHUB_SHA.zip"
       - name: Archive Release
@@ -31,8 +68,8 @@ jobs:
       # actions/upload-artifact output expires after 90 days and needs a GitHub
       # login to download. Publish a standing GitHub Release too, so there's
       # always one link anyone can download without an account. Rebuilt from
-      # master on every push; kept as a pre-release since the app is unsigned
-      # and unnotarized (see note at top of this file).
+      # master on every push; kept as a pre-release since the app is not
+      # notarized (see note at top of this file).
       - name: Publish Latest Release
         if: github.ref == 'refs/heads/master'
         env:
@@ -46,4 +83,9 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "Latest build" \
             --prerelease \
-            --notes "Automatic build of the latest master commit ($GITHUB_SHA). Unsigned and unnotarized — for testing, not for distribution. Replaced on every push to master."
+            --notes "Automatic build of the latest master commit ($GITHUB_SHA). Developer ID signed, not notarized — for testing, not for distribution. Replaced on every push to master."
+      - name: Remove signing keychain
+        if: always() && steps.signing.outputs.enabled == 'true'
+        run: |
+          rm -f "$RUNNER_TEMP/build_certificate.p12"
+          security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
