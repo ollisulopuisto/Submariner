@@ -7,8 +7,24 @@ name: Git Release
 # XXX: other criteria?
 on: [push]
 jobs:
+  credential-scope:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      package: ${{ steps.scope.outputs.package }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: scope
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: python3 scripts/select_release_checks.py >> "$GITHUB_OUTPUT"
+
   build:
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    needs: credential-scope
+    if: needs.credential-scope.outputs.package == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     runs-on: macos-15
     permissions:
       contents: write # needed to publish/update the "latest" GitHub Release below
