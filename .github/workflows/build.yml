@@ -7,7 +7,24 @@ name: Git Release
 # XXX: other criteria?
 on: [push]
 jobs:
+  credential-scope:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      package: ${{ steps.scope.outputs.package }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: scope
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: python3 scripts/select_release_checks.py >> "$GITHUB_OUTPUT"
+
   build:
+    needs: credential-scope
+    if: needs.credential-scope.outputs.package == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/'))
     runs-on: macos-15
     permissions:
       contents: write # needed to publish/update the "latest" GitHub Release below
@@ -39,12 +56,10 @@ jobs:
           cert="$RUNNER_TEMP/build_certificate.p12"
           keychain="$RUNNER_TEMP/app-signing.keychain-db"
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 -D -o "$cert"
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$keychain"
-          security set-keychain-settings -lut 21600 "$keychain"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$keychain"
-          security import "$cert" -P "$P12_PASSWORD" -T /usr/bin/codesign -f pkcs12 -k "$keychain"
+          export KEYCHAIN_PATH="$keychain" CERTIFICATE_PATH="$cert"
+          export KEYCHAIN_PASSWORD="$KEYCHAIN_PASSWORD" P12_PASSWORD="$P12_PASSWORD"
+          python3 scripts/macos_ci_credentials.py import-certificate
           rm -f "$cert"
-          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$keychain"
           security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
           security find-identity -v -p codesigning "$keychain"
       - name: Sign Submariner.app
